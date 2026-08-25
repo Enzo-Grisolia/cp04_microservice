@@ -39,9 +39,9 @@ Além da API construída nas etapas anteriores, o Checkpoint 04 adiciona profile
 
 ## Repositórios
 
-- GitHub: [Lucas-RA/CP03_MICROSERVICE](https://github.com/Lucas-RA/CP03_MICROSERVICE)
-- Docker Hub: [270506lu/cp04_microservice](https://hub.docker.com/r/270506lu/cp04_microservice)
-- Imagem utilizada na entrega: `270506lu/cp04_microservice:1.0.0`
+- GitHub: [Enzo-Grisolia/cp04_microservice](https://github.com/Enzo-Grisolia/cp04_microservice)
+- Docker Hub: [enzogrisolia/cp04_microservice](https://hub.docker.com/r/enzogrisolia/cp04_microservice)
+- Imagem utilizada na entrega: `enzogrisolia/cp04_microservice:1.0.0`
 
 ## Arquitetura
 
@@ -160,13 +160,13 @@ Use `Ctrl+C` para sair dos logs. O MySQL continuará em execução.
 ### 2. Baixar a imagem publicada
 
 ```bash
-docker pull 270506lu/cp04_microservice:1.0.0
+docker pull enzogrisolia/cp04_microservice:1.0.0
 ```
 
 Confirme a presença da imagem:
 
 ```bash
-docker images 270506lu/cp04_microservice
+docker images enzogrisolia/cp04_microservice
 ```
 
 ### 3. Executar com o profile `default`
@@ -180,7 +180,7 @@ docker run --rm --name cp04-api-default \
   -e DB_USER=root \
   -e DB_PWD=root_pwd \
   -e SPRING_PROFILES_ACTIVE=default \
-  270506lu/cp04_microservice:1.0.0
+  enzogrisolia/cp04_microservice:1.0.0
 ```
 
 O profile `default` deve criar o schema `study`, preparar as tabelas e apresentar `Started Application` nos logs.
@@ -200,7 +200,7 @@ docker run --rm --name cp04-api-prd-error \
   -e DB_USER=root \
   -e DB_PWD=root_pwd \
   -e SPRING_PROFILES_ACTIVE=prd \
-  270506lu/cp04_microservice:1.0.0
+  enzogrisolia/cp04_microservice:1.0.0
 ```
 
 O resultado esperado é uma falha semelhante a:
@@ -224,10 +224,23 @@ docker run --rm --name cp04-api-prd \
   -e DB_USER=root \
   -e DB_PWD=root_pwd \
   -e SPRING_PROFILES_ACTIVE=prd \
-  270506lu/cp04_microservice:1.0.0
+  enzogrisolia/cp04_microservice:1.0.0
 ```
 
 Com o schema e as tabelas existentes, o log deve apresentar `Started Application`.
+
+## Validações realizadas
+
+Os cenários de execução exigidos para os profiles foram validados manualmente com a imagem da entrega:
+
+| Cenário | Resultado |
+|---|---|
+| Download da imagem `enzogrisolia/cp04_microservice:1.0.0` | Imagem obtida com sucesso |
+| Profile `default` com schema `study` | Aplicação iniciada e estrutura criada/atualizada |
+| Profile `prd` com schema inexistente | Inicialização recusada, conforme esperado |
+| Profile `prd` com schema e tabelas existentes | Aplicação iniciada com sucesso |
+
+Os resultados confirmam que a seleção do profile ocorre em runtime pela variável `SPRING_PROFILES_ACTIVE` e que o profile `prd` não cria banco nem tabelas automaticamente.
 
 ## Swagger/OpenAPI
 
@@ -293,22 +306,22 @@ O campo `id` não deve ser enviado no `POST`; ele é gerado automaticamente.
 Para construir a imagem com o mesmo nome e versão publicados:
 
 ```bash
-docker build -t 270506lu/cp04_microservice:1.0.0 .
+docker build -t enzogrisolia/cp04_microservice:1.0.0 .
 ```
 
 Para publicar a versão no Docker Hub depois do login:
 
 ```bash
-docker push 270506lu/cp04_microservice:1.0.0
+docker push enzogrisolia/cp04_microservice:1.0.0
 ```
 
 Opcionalmente, publique também a tag `latest`:
 
 ```bash
-docker tag 270506lu/cp04_microservice:1.0.0 \
-  270506lu/cp04_microservice:latest
+docker tag enzogrisolia/cp04_microservice:1.0.0 \
+  enzogrisolia/cp04_microservice:latest
 
-docker push 270506lu/cp04_microservice:latest
+docker push enzogrisolia/cp04_microservice:latest
 ```
 
 ## Execução local com Maven
@@ -423,7 +436,9 @@ O profile `prd` não cria nem altera a estrutura do banco.
 Faça login na conta correta e confirme o nome completo da imagem:
 
 ```bash
-docker login -u 270506lu
-docker push 270506lu/cp04_microservice:1.0.0
+docker login -u enzogrisolia
+docker push enzogrisolia/cp04_microservice:1.0.0
 ```
+
+
 
