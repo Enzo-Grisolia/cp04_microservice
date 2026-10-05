@@ -1,269 +1,230 @@
-# Checkpoint 04 — API REST com Spring Boot e Docker
+# Check Point 2 — Microservices and Web Engineering
 
-API REST desenvolvida para o **Checkpoint 04 de Microservices and Web Engineering**.
-O projeto disponibiliza operações CRUD para dois domínios:
+API REST desenvolvida em **Java + Spring Boot** com persistência em **SQL Server**, conforme o requisito do Check Point 2 do 2º semestre de 2026.
 
-- **Finanças**: gerenciamento de títulos financeiros;
-- **Copa do Mundo**: gerenciamento de edições da competição.
+## Objetivo
 
-Além da API construída nas etapas anteriores, o Checkpoint 04 adiciona profiles de execução, configuração por variáveis de ambiente, empacotamento com Docker e publicação da imagem no Docker Hub.
+O projeto disponibiliza uma API REST funcional para realizar operações de consulta, inserção, alteração e exclusão de dados persistidos em um banco **SQL Server**.
 
-## Funcionalidades
+A implementação utiliza:
 
-- CRUD completo de Finanças e Copa do Mundo;
-- IDs gerados automaticamente pelo banco;
-- separação em Controller, DTO/Mapper, Service, Repository e Entity;
-- persistência com Spring Data JPA e MySQL;
-- documentação interativa com Swagger/OpenAPI;
-- profiles `default` e `prd`;
-- configuração do banco por variáveis de ambiente;
-- imagem Docker multi-stage;
-- mesma imagem executável nos dois profiles;
-- imagem versionada e publicada no Docker Hub.
+- Java 17;
+- Spring Boot 4.0.3;
+- Spring MVC;
+- Spring Data JPA / Hibernate;
+- Microsoft SQL Server;
+- Maven;
+- Swagger / OpenAPI;
+- Docker;
+- Lombok;
+- ModelMapper;
+- Bean Validation.
 
-## Tecnologias
-
-- Java 17 como versão de compilação do projeto
-- Spring Boot 4.0.3
-- Spring MVC
-- Spring Data JPA e Hibernate
-- MySQL
-- SpringDoc OpenAPI
-- Maven
-- Docker
-- Lombok
-- ModelMapper
-- Bean Validation
-
-> O Dockerfile atual utiliza imagens Eclipse Temurin 21 para build e execução. O Maven compila o projeto com compatibilidade Java 17.
-
-## Repositórios
-
-- GitHub: [Enzo-Grisolia/cp04_microservice](https://github.com/Enzo-Grisolia/cp04_microservice)
-- Docker Hub: [enzogrisolia/cp04_microservice](https://hub.docker.com/r/enzogrisolia/cp04_microservice)
-- Imagem utilizada na entrega: `enzogrisolia/cp04_microservice:1.0.0`
+> **Importante:** este projeto não utiliza o projeto `study-apir`.
 
 ## Arquitetura
 
-O projeto separa o contrato HTTP da persistência:
+A aplicação está organizada em camadas:
 
 ```text
 Cliente HTTP
     ↓
 Controller
     ↓
-DTO ↔ Mapper
+DTO / Mapper
     ↓
 Service
     ↓
 Repository
     ↓
-Entity JPA ↔ MySQL
+Entity JPA
+    ↓
+SQL Server
 ```
 
-- **Controller**: recebe as requisições e devolve as respostas HTTP;
-- **DTO**: define os dados de entrada e saída da API sem expor diretamente as entidades;
-- **Mapper**: converte DTOs em entidades e entidades em DTOs com ModelMapper;
-- **Service**: centraliza o fluxo de negócio e as operações CRUD;
-- **Repository**: acessa o banco com Spring Data JPA;
-- **Entity**: representa as tabelas persistidas no MySQL.
+- **Controller:** recebe as requisições HTTP e retorna as respostas da API.
+- **DTO:** define os dados de entrada e saída.
+- **Mapper:** converte DTOs e entidades.
+- **Service:** concentra as operações da aplicação.
+- **Repository:** utiliza Spring Data JPA para acessar o banco.
+- **Entity:** representa as tabelas persistidas no SQL Server.
 
-Os DTOs de criação não recebem `id`. Nas entidades, o identificador é gerado automaticamente:
+## Domínios da API
 
-```java
-@Id
-@GeneratedValue(strategy = GenerationType.AUTO)
-private Long id;
+### Finanças
+
+A entidade `Financa` representa registros de títulos financeiros.
+
+Tabela utilizada:
+
+```text
+financas
 ```
 
-## Profiles
+Campos:
 
-### `default`
+| Campo | Tipo |
+|---|---|
+| id | Long |
+| taxa | double |
+| emissor | String |
+| risco | String |
+| vencimento | String |
+| quantidade | int |
 
-O profile padrão é destinado ao desenvolvimento local:
+### Copa do Mundo
 
-- aceita valores padrão para a conexão;
-- inclui `createDatabaseIfNotExist=true` na URL JDBC;
-- usa `spring.jpa.hibernate.ddl-auto=update`;
-- permite ao Hibernate criar ou atualizar as tabelas;
-- exibe SQL no console com `spring.jpa.show-sql=true`.
+A entidade `Futebol` representa edições da Copa do Mundo.
 
-Configuração: `src/main/resources/application.properties`.
+Tabela utilizada:
 
-### `prd`
+```text
+futebois
+```
 
-O profile de produção exige configuração explícita:
+Campos:
 
-- todas as variáveis `DB_*` são obrigatórias;
-- não contém `createDatabaseIfNotExist=true`;
-- usa `spring.jpa.hibernate.ddl-auto=none`;
-- não cria nem altera tabelas;
-- desabilita a exibição de SQL com `spring.jpa.show-sql=false`.
+| Campo | Tipo |
+|---|---|
+| id | Long |
+| ano | int |
+| capeao | String |
+| sede | String |
+| vice | String |
+| melhorJogador | String |
 
-O schema e as tabelas precisam existir antes da inicialização da aplicação.
+O campo `capeao` é mantido dessa forma para preservar o contrato da API já existente.
 
-Configuração: `src/main/resources/application-prd.properties`.
+## Configuração do SQL Server
 
-## Variáveis de ambiente
+A aplicação utiliza o driver oficial JDBC do SQL Server:
 
-| Variável | Obrigatória | Descrição | Exemplo local |
-|---|---|---|---|
-| `SPRING_PROFILES_ACTIVE` | Sim | Profile ativo | `default` ou `prd` |
-| `DB_SERVER_URL` | Sim em `prd` | Endereço do MySQL | `host.docker.internal` |
-| `DB_SERVER_PORT` | Sim em `prd` | Porta do MySQL | `3306` |
-| `DB_SCHEMA` | Sim em `prd` | Nome do schema | `study` |
-| `DB_USER` | Sim em `prd` | Usuário do banco | `root` |
-| `DB_PWD` | Sim em `prd` | Senha do banco | `root_pwd` |
+```xml
+<dependency>
+    <groupId>com.microsoft.sqlserver</groupId>
+    <artifactId>mssql-jdbc</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
 
-As credenciais deste README são somente exemplos locais. Não utilize credenciais reais no repositório.
+A conexão é configurada por variáveis de ambiente.
 
-Quando a API executa em um container, `localhost` aponta para o próprio container. No Docker Desktop, `host.docker.internal` permite acessar o MySQL publicado na máquina host.
+### Variáveis
+
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `DB_SERVER_URL` | Servidor/IP do SQL Server | `localhost` |
+| `DB_SERVER_PORT` | Porta do SQL Server | `1433` |
+| `DB_SCHEMA` | Nome do banco | `cp04_microservice` |
+| `DB_USER` | Usuário | `sa` |
+| `DB_PWD` | Senha | definida localmente |
+| `DB_ENCRYPT` | Criptografia JDBC | `false` |
+| `DB_TRUST_SERVER_CERTIFICATE` | Confia no certificado do servidor | `true` |
+
+**Não coloque a senha real do SQL Server no GitHub.**
+
+### Configuração local
+
+O arquivo `application.properties` usa:
+
+```properties
+spring.datasource.url=jdbc:sqlserver://${DB_SERVER_URL:localhost}:${DB_SERVER_PORT:1433};databaseName=${DB_SCHEMA:cp04_microservice};encrypt=${DB_ENCRYPT:false};trustServerCertificate=${DB_TRUST_SERVER_CERTIFICATE:true}
+spring.datasource.username=${DB_USER:sa}
+spring.datasource.password=${DB_PWD:}
+```
+
+Para a avaliação, substitua as variáveis pelos dados do **SQL Server disponibilizado pelo professor**.
+
+O profile local utiliza:
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
+
+Assim, o Hibernate pode criar/atualizar as tabelas correspondentes às entidades quando a aplicação é executada pela primeira vez.
+
+## Profile de produção
+
+O arquivo `application-prd.properties` exige as informações do banco por variáveis de ambiente e utiliza:
+
+```properties
+spring.jpa.hibernate.ddl-auto=none
+```
+
+Nesse modo, o banco e as tabelas precisam existir previamente.
+
+Para executar:
+
+```bash
+DB_SERVER_URL=SEU_SERVIDOR \
+DB_SERVER_PORT=1433 \
+DB_SCHEMA=SEU_BANCO \
+DB_USER=SEU_USUARIO \
+DB_PWD=SUA_SENHA \
+SPRING_PROFILES_ACTIVE=prd \
+mvn spring-boot:run
+```
 
 ## Pré-requisitos
 
-Para executar a imagem publicada:
+Para executar localmente:
 
-- Docker instalado e em execução;
-- porta `8080` disponível para a API;
-- porta `3306` disponível para o MySQL.
+- Java 17 ou superior;
+- Maven;
+- SQL Server;
+- banco disponibilizado pelo professor ou SQL Server local;
+- acesso à porta do SQL Server.
 
-Não é necessário instalar Java ou Maven para executar a imagem do Docker Hub.
+## Execução local
 
-## Execução completa com Docker
-
-Os exemplos abaixo usam Git Bash, Linux ou macOS. No Git Bash, execute os comandos a partir da raiz do projeto.
-
-### 1. Iniciar o MySQL
+Configure as variáveis de ambiente e execute:
 
 ```bash
-docker run -d --name cp04-mysql --rm \
-  -e MYSQL_ROOT_PASSWORD=root_pwd \
-  -e MYSQL_ROOT_HOST=% \
-  -p 3306:3306 \
-  mysql:8.0
+mvn spring-boot:run
 ```
 
-Confirme que o container iniciou:
+No Windows PowerShell:
 
-```bash
-docker ps
+```powershell
+$env:DB_SERVER_URL="localhost"
+$env:DB_SERVER_PORT="1433"
+$env:DB_SCHEMA="cp04_microservice"
+$env:DB_USER="sa"
+$env:DB_PWD="SUA_SENHA"
+$env:DB_ENCRYPT="false"
+$env:DB_TRUST_SERVER_CERTIFICATE="true"
+
+mvn spring-boot:run
 ```
 
-Acompanhe os logs até aparecer `ready for connections`:
-
-```bash
-docker logs -f cp04-mysql
-```
-
-Use `Ctrl+C` para sair dos logs. O MySQL continuará em execução.
-
-### 2. Baixar a imagem publicada
-
-```bash
-docker pull enzogrisolia/cp04_microservice:1.0.0
-```
-
-Confirme a presença da imagem:
-
-```bash
-docker images enzogrisolia/cp04_microservice
-```
-
-### 3. Executar com o profile `default`
-
-```bash
-docker run --rm --name cp04-api-default \
-  -p 8080:8080 \
-  -e DB_SERVER_URL=host.docker.internal \
-  -e DB_SERVER_PORT=3306 \
-  -e DB_SCHEMA=study \
-  -e DB_USER=root \
-  -e DB_PWD=root_pwd \
-  -e SPRING_PROFILES_ACTIVE=default \
-  enzogrisolia/cp04_microservice:1.0.0
-```
-
-O profile `default` deve criar o schema `study`, preparar as tabelas e apresentar `Started Application` nos logs.
-
-Depois da validação, encerre a API com `Ctrl+C`. Como foi usado `--rm`, o container será removido automaticamente.
-
-### 4. Validar que `prd` não cria o banco
-
-Use propositalmente um schema inexistente:
-
-```bash
-docker run --rm --name cp04-api-prd-error \
-  -p 8080:8080 \
-  -e DB_SERVER_URL=host.docker.internal \
-  -e DB_SERVER_PORT=3306 \
-  -e DB_SCHEMA=study_prd_inexistente \
-  -e DB_USER=root \
-  -e DB_PWD=root_pwd \
-  -e SPRING_PROFILES_ACTIVE=prd \
-  enzogrisolia/cp04_microservice:1.0.0
-```
-
-O resultado esperado é uma falha semelhante a:
+Quando a aplicação iniciar, a API ficará disponível em:
 
 ```text
-Unknown database 'study_prd_inexistente'
+http://localhost:8080
 ```
 
-Esse comportamento confirma que o profile `prd` não cria o banco automaticamente.
+## Swagger / OpenAPI
 
-### 5. Executar `prd` com estrutura existente
+Com a aplicação em execução:
 
-Use o schema `study`, criado anteriormente pelo profile `default`:
+- Swagger UI: `http://localhost:8080/`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-```bash
-docker run --rm --name cp04-api-prd \
-  -p 8080:8080 \
-  -e DB_SERVER_URL=host.docker.internal \
-  -e DB_SERVER_PORT=3306 \
-  -e DB_SCHEMA=study \
-  -e DB_USER=root \
-  -e DB_PWD=root_pwd \
-  -e SPRING_PROFILES_ACTIVE=prd \
-  enzogrisolia/cp04_microservice:1.0.0
-```
-
-Com o schema e as tabelas existentes, o log deve apresentar `Started Application`.
-
-## Validações realizadas
-
-Os cenários de execução exigidos para os profiles foram validados manualmente com a imagem da entrega:
-
-| Cenário | Resultado |
-|---|---|
-| Download da imagem `enzogrisolia/cp04_microservice:1.0.0` | Imagem obtida com sucesso |
-| Profile `default` com schema `study` | Aplicação iniciada e estrutura criada/atualizada |
-| Profile `prd` com schema inexistente | Inicialização recusada, conforme esperado |
-| Profile `prd` com schema e tabelas existentes | Aplicação iniciada com sucesso |
-
-Os resultados confirmam que a seleção do profile ocorre em runtime pela variável `SPRING_PROFILES_ACTIVE` e que o profile `prd` não cria banco nem tabelas automaticamente.
-
-## Swagger/OpenAPI
-
-Com a aplicação em execução, acesse:
-
-- Swagger UI: [http://localhost:8080/](http://localhost:8080/)
-- OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-
-O Swagger permite consultar e testar todos os endpoints diretamente pelo navegador.
+O Swagger pode ser utilizado para demonstrar os endpoints durante a avaliação.
 
 ## Endpoints
 
 ### Finanças — `/financas`
 
-| Método | Rota | Resposta esperada | Descrição |
-|---|---|---|---|
-| `POST` | `/financas` | `201 Created` | Cadastra uma finança |
-| `GET` | `/financas` | `200 OK` | Lista todas as finanças |
-| `GET` | `/financas/{id}` | `200 OK` ou `404 Not Found` | Busca uma finança |
-| `PUT` | `/financas/{id}` | `200 OK` ou `404 Not Found` | Atualiza uma finança |
-| `DELETE` | `/financas/{id}` | `204 No Content` ou `404 Not Found` | Remove uma finança |
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/financas` | Insere uma finança |
+| GET | `/financas` | Consulta todas |
+| GET | `/financas/{id}` | Consulta por ID |
+| PUT | `/financas/{id}` | Altera uma finança |
+| DELETE | `/financas/{id}` | Exclui uma finança |
 
-Exemplo de body para `POST` e `PUT`:
+Exemplo de POST:
 
 ```json
 {
@@ -275,19 +236,19 @@ Exemplo de body para `POST` e `PUT`:
 }
 ```
 
-O campo `id` não deve ser enviado no `POST`; ele é gerado automaticamente.
+Resposta esperada: `201 Created`.
 
 ### Copa do Mundo — `/copa`
 
-| Método | Rota | Resposta esperada | Descrição |
-|---|---|---|---|
-| `POST` | `/copa` | `201 Created` | Cadastra uma edição da Copa |
-| `GET` | `/copa` | `200 OK` | Lista todas as edições |
-| `GET` | `/copa/{id}` | `200 OK` ou `404 Not Found` | Busca uma edição |
-| `PUT` | `/copa/{id}` | `200 OK` ou `404 Not Found` | Atualiza uma edição |
-| `DELETE` | `/copa/{id}` | `204 No Content` ou `404 Not Found` | Remove uma edição |
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/copa` | Insere uma edição |
+| GET | `/copa` | Consulta todas |
+| GET | `/copa/{id}` | Consulta por ID |
+| PUT | `/copa/{id}` | Altera uma edição |
+| DELETE | `/copa/{id}` | Exclui uma edição |
 
-Exemplo de body para `POST` e `PUT`:
+Exemplo de POST:
 
 ```json
 {
@@ -299,44 +260,93 @@ Exemplo de body para `POST` e `PUT`:
 }
 ```
 
-O campo `id` não deve ser enviado no `POST`; ele é gerado automaticamente.
+Resposta esperada: `201 Created`.
 
-## Build e publicação da imagem
+## Testando o CRUD
 
-Para construir a imagem com o mesmo nome e versão publicados:
+### 1. Inserir
 
-```bash
-docker build -t enzogrisolia/cp04_microservice:1.0.0 .
+```http
+POST /financas
+Content-Type: application/json
 ```
 
-Para publicar a versão no Docker Hub depois do login:
+Body:
 
-```bash
-docker push enzogrisolia/cp04_microservice:1.0.0
+```json
+{
+  "emissor": "Tesouro Nacional",
+  "taxa": 12.5,
+  "risco": "baixo",
+  "vencimento": "2030-01-01",
+  "quantidade": 10
+}
 ```
 
-Opcionalmente, publique também a tag `latest`:
+### 2. Consultar
 
-```bash
-docker tag enzogrisolia/cp04_microservice:1.0.0 \
-  enzogrisolia/cp04_microservice:latest
-
-docker push enzogrisolia/cp04_microservice:latest
+```http
+GET /financas
 ```
 
-## Execução local com Maven
+### 3. Consultar por ID
 
-Para trabalhar diretamente com o código-fonte, tenha Java, Maven e MySQL disponíveis. No Git Bash:
+```http
+GET /financas/1
+```
+
+### 4. Alterar
+
+```http
+PUT /financas/1
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "emissor": "Tesouro Nacional",
+  "taxa": 13.0,
+  "risco": "baixo",
+  "vencimento": "2030-01-01",
+  "quantidade": 15
+}
+```
+
+### 5. Excluir
+
+```http
+DELETE /financas/1
+```
+
+O mesmo fluxo pode ser demonstrado utilizando o recurso `/copa`.
+
+## Docker
+
+O projeto possui um Dockerfile para gerar a aplicação.
+
+Build:
 
 ```bash
-DB_SERVER_URL=localhost \
-DB_SERVER_PORT=3306 \
-DB_SCHEMA=study \
-DB_USER=root \
-DB_PWD=root_pwd \
-SPRING_PROFILES_ACTIVE=default \
-mvn spring-boot:run
+docker build -t cp04-microservice .
 ```
+
+Execução:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e DB_SERVER_URL=host.docker.internal \
+  -e DB_SERVER_PORT=1433 \
+  -e DB_SCHEMA=cp04_microservice \
+  -e DB_USER=sa \
+  -e DB_PWD=SUA_SENHA \
+  -e DB_ENCRYPT=false \
+  -e DB_TRUST_SERVER_CERTIFICATE=true \
+  cp04-microservice
+```
+
+Quando a API estiver em container e o SQL Server estiver na máquina host, `host.docker.internal` pode ser utilizado no Docker Desktop.
 
 ## Estrutura do projeto
 
@@ -348,14 +358,6 @@ src/
 │   │   │   ├── FinancasController.java
 │   │   │   └── FutebolController.java
 │   │   ├── dto/
-│   │   │   ├── FinancaCreateRequest.java
-│   │   │   ├── FinancaUpdateRequest.java
-│   │   │   ├── FinancaResponse.java
-│   │   │   ├── FinancaMapper.java
-│   │   │   ├── FutebolCreateRequest.java
-│   │   │   ├── FutebolUpdateRequest.java
-│   │   │   ├── FutebolResponse.java
-│   │   │   └── FutebolMapper.java
 │   │   ├── model/
 │   │   │   ├── Financa.java
 │   │   │   └── Futebol.java
@@ -363,82 +365,47 @@ src/
 │   │   │   ├── FinancaRepository.java
 │   │   │   └── FutebolRepository.java
 │   │   ├── service/
-│   │   │   ├── FinancaService.java
-│   │   │   └── FutebolService.java
 │   │   └── Application.java
 │   └── resources/
 │       ├── application.properties
 │       └── application-prd.properties
 └── test/
-    └── java/br/com/fiap/cp01_api01/ApplicationTests.java
 ```
 
-Na raiz também estão:
+## Checklist do Check Point 2
 
-- `Dockerfile`: build multi-stage e imagem de execução;
-- `.dockerignore`: exclusões do contexto de build;
-- `pom.xml`: dependências e configuração Maven.
+- [x] Java com Spring Boot
+- [x] API REST
+- [x] Endpoints funcionando
+- [x] Configuração de conexão com SQL Server
+- [x] Driver JDBC do SQL Server
+- [x] Spring Data JPA
+- [x] Entidades JPA
+- [x] Consulta de dados
+- [x] Inserção de dados
+- [x] Alteração de dados
+- [x] Exclusão de dados
+- [x] Organização em camadas
+- [x] README com execução, banco e endpoints
+- [ ] Preencher as credenciais do SQL Server disponibilizado pelo professor
+- [ ] Validar a conexão real com o banco disponibilizado
+- [ ] Demonstrar CRUD durante a avaliação
 
-## Comandos de diagnóstico
+## Entrega
 
-Listar containers em execução:
+Repositório:
 
-```bash
-docker ps
+https://github.com/Enzo-Grisolia/cp04_microservice
+
+A entrega do Portal do Aluno deve ser feita em um único arquivo `.txt`, contendo:
+
+```text
+URL do repositório no GitHub:
+https://github.com/Enzo-Grisolia/cp04_microservice
+
+Nome completo e RM dos integrantes:
+NOME — RM
+NOME — RM
 ```
 
-Acompanhar logs:
-
-```bash
-docker logs -f cp04-api-default
-```
-
-Parar a API ou o MySQL:
-
-```bash
-docker stop cp04-api-default
-docker stop cp04-mysql
-```
-
-## Solução de problemas
-
-### A API não conecta ao MySQL
-
-- confirme que `cp04-mysql` aparece em `docker ps`;
-- aguarde o log `ready for connections` antes de iniciar a API;
-- confirme o mapeamento `3306:3306`;
-- use `host.docker.internal` quando a API estiver no Docker Desktop;
-- use `localhost` quando a aplicação estiver executando diretamente pelo Maven.
-
-### A porta 8080 ou 3306 já está em uso
-
-Identifique os containers ativos:
-
-```bash
-docker ps
-```
-
-Pare o container conflitante ou altere a porta publicada.
-
-### O profile `prd` não inicia
-
-Confirme que:
-
-- todas as variáveis `DB_*` foram fornecidas;
-- o MySQL está acessível;
-- o schema existe;
-- as tabelas já foram criadas.
-
-O profile `prd` não cria nem altera a estrutura do banco.
-
-### `denied: requested access to the resource is denied`
-
-Faça login na conta correta e confirme o nome completo da imagem:
-
-```bash
-docker login -u enzogrisolia
-docker push enzogrisolia/cp04_microservice:1.0.0
-```
-
-
-
+A entrega deve ser realizada por apenas um representante do grupo.
