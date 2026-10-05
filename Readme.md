@@ -165,6 +165,77 @@ SPRING_PROFILES_ACTIVE=prd \
 mvn spring-boot:run
 ```
 
+## Execução rápida com Docker + SQL Server
+
+O repositório já possui um `docker-compose.yml` para subir o SQL Server com os mesmos dados do comando fornecido para o Check Point:
+
+```bash
+docker compose up -d sqlserver
+```
+
+Isso cria o container `sqlserver`, publica a porta `1433` e utiliza:
+
+- usuário: `sa`
+- senha: `1q2w3e4R@`
+- porta: `1433`
+
+### Criar o banco e as tabelas
+
+Depois que o SQL Server estiver iniciado, execute o conteúdo de:
+
+```text
+database/create-database.sql
+```
+
+Esse script cria o banco `cp04_microservice` e as tabelas `financas` e `futebois`, caso ainda não existam.
+
+Você pode executar o script pelo SQL Server Management Studio (SSMS), Azure Data Studio ou outra ferramenta conectada ao SQL Server local.
+
+Conexão:
+
+```text
+Servidor: localhost,1433
+Usuário: sa
+Senha: 1q2w3e4R@
+Banco: cp04_microservice
+```
+
+### Iniciar a API
+
+Com o banco criado:
+
+```bash
+mvn clean spring-boot:run
+```
+
+A configuração local já possui os valores padrão para esse SQL Server Docker. Também é possível sobrescrevê-los por variáveis de ambiente.
+
+API:
+
+```text
+http://localhost:8080
+```
+
+Swagger:
+
+```text
+http://localhost:8080/
+```
+
+### Fluxo recomendado para a demonstração
+
+1. Subir o SQL Server com `docker compose up -d sqlserver`.
+2. Criar o banco usando `database/create-database.sql`.
+3. Iniciar a API com `mvn clean spring-boot:run`.
+4. Abrir o Swagger em `http://localhost:8080/`.
+5. Fazer POST em `/financas` ou `/copa`.
+6. Fazer GET para comprovar a persistência.
+7. Fazer PUT para comprovar alteração.
+8. Fazer DELETE para comprovar exclusão.
+9. Fazer um GET novamente para comprovar a remoção.
+
+> **Segurança:** a senha acima é a senha do ambiente SQL Server local usado no exercício. Não reutilize essa senha em um servidor real ou ambiente de produção.
+
 ## Pré-requisitos
 
 Para executar localmente:
@@ -387,8 +458,10 @@ src/
 - [x] Exclusão de dados
 - [x] Organização em camadas
 - [x] README com execução, banco e endpoints
-- [ ] Preencher as credenciais do SQL Server disponibilizado pelo professor
-- [ ] Validar a conexão real com o banco disponibilizado
+- [x] Ambiente SQL Server local via Docker Compose
+- [x] Script SQL para criação do banco e tabelas
+- [x] Configuração local da conexão SQL Server
+- [ ] Validar a conexão com o SQL Server disponibilizado pelo professor, caso seja diferente do ambiente local
 - [ ] Demonstrar CRUD durante a avaliação
 
 ## Entrega
