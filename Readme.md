@@ -464,21 +464,6 @@ src/
 - [ ] Validar a conexão com o SQL Server disponibilizado pelo professor, caso seja diferente do ambiente local
 - [ ] Demonstrar CRUD durante a avaliação
 
-## Entrega
-
-Repositório:
+## Repositório
 
 https://github.com/Enzo-Grisolia/cp04_microservice
-
-A entrega do Portal do Aluno deve ser feita em um único arquivo `.txt`, contendo:
-
-```text
-URL do repositório no GitHub:
-https://github.com/Enzo-Grisolia/cp04_microservice
-
-Nome completo e RM dos integrantes:
-NOME — RM
-NOME — RM
-```
-
-A entrega deve ser realizada por apenas um representante do grupo.
